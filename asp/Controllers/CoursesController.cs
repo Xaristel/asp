@@ -57,7 +57,7 @@ namespace asp.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(course);
+                //_context.Add(course);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
@@ -96,7 +96,7 @@ namespace asp.Controllers
             {
                 try
                 {
-                    _context.Update(course);
+                    //_context.Update(course);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)

@@ -57,7 +57,7 @@ namespace asp.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(@group);
+                //_context.Add(@group);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
@@ -96,7 +96,7 @@ namespace asp.Controllers
             {
                 try
                 {
-                    _context.Update(@group);
+                    //_context.Update(@group);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)

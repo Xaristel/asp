@@ -11,35 +11,31 @@ namespace asp.Controllers
 {
     public class StudentsController : Controller
     {
-        private readonly DataContext _context;
+        private IStudentRepository studentRepository;
 
-        public StudentsController(DataContext context)
+        public StudentsController()
         {
-            _context = context;
+            this.studentRepository = new StudentRepository(new DataContext());
         }
 
         // GET: Students
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            return View(await _context.Student.ToListAsync());
+            return View(studentRepository.GetStudents());
         }
 
         // GET: Students/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Details(int id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
+                var student = studentRepository.GetStudentByID(id);
+                return View(student);
             }
-
-            var student = await _context.Student
-                .FirstOrDefaultAsync(m => m.StudentId == id);
-            if (student == null)
+            catch (ArgumentNullException)
             {
-                return NotFound();
+                throw new ArgumentNullException();
             }
-
-            return View(student);
         }
 
         // GET: Students/Create
@@ -53,31 +49,29 @@ namespace asp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("StudentId,FirstName,LastName,GroupId")] Student student)
+        public IActionResult Create([Bind("StudentId,FirstName,LastName,GroupId")] Student student)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(student);
-                await _context.SaveChangesAsync();
+                studentRepository.AddStudent(student);
+                studentRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
             return View(student);
         }
 
         // GET: Students/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit(int id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
+                var student = studentRepository.GetStudentByID(id);
+                return View(student);
             }
-
-            var student = await _context.Student.FindAsync(id);
-            if (student == null)
+            catch (ArgumentNullException)
             {
-                return NotFound();
+                throw new ArgumentNullException();
             }
-            return View(student);
         }
 
         // POST: Students/Edit/5
@@ -85,7 +79,7 @@ namespace asp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("StudentId,FirstName,LastName,GroupId")] Student student)
+        public IActionResult Edit(int id, [Bind("StudentId,FirstName,LastName,GroupId")] Student student)
         {
             if (id != student.StudentId)
             {
@@ -96,8 +90,8 @@ namespace asp.Controllers
             {
                 try
                 {
-                    _context.Update(student);
-                    await _context.SaveChangesAsync();
+                    studentRepository.UpdateStudent(student);
+                    studentRepository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -116,37 +110,41 @@ namespace asp.Controllers
         }
 
         // GET: Students/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public IActionResult Delete(int id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
+                var student = studentRepository.GetStudentByID(id);
+                return View(student);
             }
-
-            var student = await _context.Student
-                .FirstOrDefaultAsync(m => m.StudentId == id);
-            if (student == null)
+            catch (ArgumentNullException)
             {
-                return NotFound();
+                throw new ArgumentNullException();
             }
-
-            return View(student);
         }
 
         // POST: Students/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            var student = await _context.Student.FindAsync(id);
-            _context.Student.Remove(student);
-            await _context.SaveChangesAsync();
+            var student = studentRepository.GetStudentByID(id);
+            studentRepository.DeleteStudent(student);
+            studentRepository.Save();
             return RedirectToAction(nameof(Index));
         }
 
         private bool StudentExists(int id)
         {
-            return _context.Student.Any(e => e.StudentId == id);
+            try
+            {
+                studentRepository.GetStudentByID(id);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
