@@ -11,35 +11,33 @@ namespace asp.Controllers
 {
     public class CoursesController : Controller
     {
-        private readonly DataContext _context;
+        private IGroupRepository groupRepository;
+        private ICourseRepository courseRepository;
 
-        public CoursesController(DataContext context)
+        public CoursesController()
         {
-            _context = context;
+            this.groupRepository = new GroupRepository(new DataContext());
+            this.courseRepository = new CourseRepository(new DataContext());
         }
 
         // GET: Courses
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            return View(await _context.Course.ToListAsync());
+            return View(courseRepository.GetCourses());
         }
 
         // GET: Courses/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Details(int id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
+                var course = courseRepository.GetCourseByID(id);
+                return View(course);
             }
-
-            var course = await _context.Course
-                .FirstOrDefaultAsync(m => m.CourseId == id);
-            if (course == null)
+            catch (ArgumentNullException)
             {
-                return NotFound();
+                throw new ArgumentNullException();
             }
-
-            return View(course);
         }
 
         // GET: Courses/Create
@@ -53,31 +51,29 @@ namespace asp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CourseId,CourseName,CourseDescription")] Course course)
+        public IActionResult Create([Bind("CourseId,CourseName,CourseDescription")] Course course)
         {
             if (ModelState.IsValid)
             {
-                //_context.Add(course);
-                await _context.SaveChangesAsync();
+                courseRepository.AddCourse(course);
+                courseRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
             return View(course);
         }
 
         // GET: Courses/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit(int id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
+                var course = courseRepository.GetCourseByID(id);
+                return View(course);
             }
-
-            var course = await _context.Course.FindAsync(id);
-            if (course == null)
+            catch (ArgumentNullException)
             {
-                return NotFound();
+                throw new ArgumentNullException();
             }
-            return View(course);
         }
 
         // POST: Courses/Edit/5
@@ -85,9 +81,9 @@ namespace asp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("CourseId,CourseName,CourseDescription")] Course course)
+        public IActionResult Edit(int id, [Bind("CourseId,CourseName,CourseDescription")] Course @course)
         {
-            if (id != course.CourseId)
+            if (id != @course.CourseId)
             {
                 return NotFound();
             }
@@ -96,12 +92,12 @@ namespace asp.Controllers
             {
                 try
                 {
-                    //_context.Update(course);
-                    await _context.SaveChangesAsync();
+                    courseRepository.UpdateCourse(course);
+                    courseRepository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CourseExists(course.CourseId))
+                    if (!CourseExists(@course.CourseId))
                     {
                         return NotFound();
                     }
@@ -112,62 +108,67 @@ namespace asp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(course);
+            return View(@course);
         }
 
         // GET: Courses/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public IActionResult Delete(int id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
+                var course = courseRepository.GetCourseByID(id);
+                var groups = from m in groupRepository.GetGroups()
+                             where m.CourseId == id
+                             select m;
+
+                if (groups.ToList().Count == 0)
+                {
+                    return View(@course);
+                }
+                else
+                {
+                    return Content("Error. This course has groups!");
+                }
             }
-
-            var course = await _context.Course
-                .FirstOrDefaultAsync(m => m.CourseId == id);
-
-            var group = await _context.Group.FirstOrDefaultAsync(m => m.CourseId == id);
-
-            if (course == null)
+            catch (ArgumentNullException)
             {
-                return NotFound();
-            }
-
-            if (group == null)
-            {
-                return View(course);
-            }
-            else
-            {
-                return Content("Error. This course has groups!");
+                throw new ArgumentNullException();
             }
         }
 
         // POST: Courses/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            var course = await _context.Course.FindAsync(id);
-            _context.Course.Remove(course);
-            await _context.SaveChangesAsync();
+            var course = courseRepository.GetCourseByID(id);
+            courseRepository.DeleteCourse(course);
+            courseRepository.Save();
             return RedirectToAction(nameof(Index));
         }
 
         private bool CourseExists(int id)
         {
-            return _context.Course.Any(e => e.CourseId == id);
+            try
+            {
+                courseRepository.GetCourseByID(id);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         // GET: Courses/Show
-        public async Task<IActionResult> Show(int? id)
+        public IActionResult Show(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var groups = from m in _context.Group
+            var groups = from m in groupRepository.GetGroups()
                          where m.CourseId == id
                          select m;
 

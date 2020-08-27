@@ -1,4 +1,7 @@
-﻿INSERT INTO Course (CourseName, CourseDescription) VALUES
+﻿USE Univercity;
+GO
+
+INSERT INTO Course (CourseName, CourseDescription) VALUES
 ('IVT', 'Faculty of Informatics and Computer Science'),
 ('AES', 'Faculty of Automatic Telecommunications'),
 ('MTS', 'Faculty of Multiservice Telecommunication Systems'),

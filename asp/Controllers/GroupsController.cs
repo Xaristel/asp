@@ -11,35 +11,33 @@ namespace asp.Controllers
 {
     public class GroupsController : Controller
     {
-        private readonly DataContext _context;
+        private IGroupRepository groupRepository;
+        private IStudentRepository studentRepository;
 
-        public GroupsController(DataContext context)
+        public GroupsController()
         {
-            _context = context;
+            this.groupRepository = new GroupRepository(new DataContext());
+            this.studentRepository = new StudentRepository(new DataContext());
         }
 
         // GET: Groups
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            return View(await _context.Group.ToListAsync());
+            return View(groupRepository.GetGroups());
         }
 
         // GET: Groups/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Details(int id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
+                var group = groupRepository.GetGroupByID(id);
+                return View(group);
             }
-
-            var @group = await _context.Group
-                .FirstOrDefaultAsync(m => m.GroupId == id);
-            if (@group == null)
+            catch (ArgumentNullException)
             {
-                return NotFound();
+                throw new ArgumentNullException();
             }
-
-            return View(@group);
         }
 
         // GET: Groups/Create
@@ -53,31 +51,29 @@ namespace asp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("GroupId,CourseId,GroupName")] Group @group)
+        public IActionResult Create([Bind("GroupId,CourseId,GroupName")] Group group)
         {
             if (ModelState.IsValid)
             {
-                //_context.Add(@group);
-                await _context.SaveChangesAsync();
+                groupRepository.AddGroup(group);
+                groupRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
-            return View(@group);
+            return View(group);
         }
 
         // GET: Groups/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit(int id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
+                var group = groupRepository.GetGroupByID(id);
+                return View(group);
             }
-
-            var @group = await _context.Group.FindAsync(id);
-            if (@group == null)
+            catch (ArgumentNullException)
             {
-                return NotFound();
+                throw new ArgumentNullException();
             }
-            return View(@group);
         }
 
         // POST: Groups/Edit/5
@@ -85,7 +81,7 @@ namespace asp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("GroupId,CourseId,GroupName")] Group @group)
+        public IActionResult Edit(int id, [Bind("GroupId,CourseId,GroupName")] Group @group)
         {
             if (id != @group.GroupId)
             {
@@ -96,8 +92,8 @@ namespace asp.Controllers
             {
                 try
                 {
-                    //_context.Update(@group);
-                    await _context.SaveChangesAsync();
+                    groupRepository.UpdateGroup(group);
+                    groupRepository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -116,55 +112,61 @@ namespace asp.Controllers
         }
 
         // GET: Groups/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public IActionResult Delete(int id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
+                var group = groupRepository.GetGroupByID(id);
+                var students = from m in studentRepository.GetStudents()
+                               where m.GroupId == id
+                               select m;
+                if (students.ToList().Count == 0)
+                {
+                    return View(@group);
+                }
+                else
+                {
+                    return Content("Error. This group has students!");
+                }
             }
-
-            var @group = await _context.Group.FirstOrDefaultAsync(m => m.GroupId == id);
-
-            var student = await _context.Student.FirstOrDefaultAsync(m => m.GroupId == id);
-            if (@group == null)
+            catch (ArgumentNullException)
             {
-                return NotFound();
-            }
-
-            if (student == null)
-            {
-                return View(@group);
-            }
-            else
-            {
-                return Content("Error. This group has students!");
+                throw new ArgumentNullException();
             }
         }
 
         // POST: Groups/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            var @group = await _context.Group.FindAsync(id);
-            _context.Group.Remove(@group);
-            await _context.SaveChangesAsync();
+            var group = groupRepository.GetGroupByID(id);
+            groupRepository.DeleteGroup(group);
+            groupRepository.Save();
             return RedirectToAction(nameof(Index));
         }
 
         private bool GroupExists(int id)
         {
-            return _context.Group.Any(e => e.GroupId == id);
+            try
+            {
+                groupRepository.GetGroupByID(id);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        public async Task<IActionResult> Show(int? id)
+        public IActionResult Show(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var students = from m in _context.Student
+            var students = from m in studentRepository.GetStudents()
                            where m.GroupId == id
                            select m;
 

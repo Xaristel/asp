@@ -1,45 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Data;
-using System.Data.Entity;
 
 namespace asp.Models
 {
-    public class StudentRepository : IStudentRepository, IDisposable
+    public class CourseRepository : ICourseRepository, IDisposable
     {
         private DataContext context;
 
-        public StudentRepository(DataContext context)
+        public CourseRepository(DataContext context)
         {
             this.context = context;
         }
 
-        public IEnumerable<Student> GetStudents()
+        public IEnumerable<Course> GetCourses()
         {
-            return context.Student.ToList();
+            return context.Course.ToList();
         }
 
-        public Student GetStudentByID(int id)
+        public Course GetCourseByID(int id)
         {
-            return context.Student.Find(id);
+            return context.Course.Find(id);
         }
 
-        public void AddStudent(Student student)
+        public void AddCourse(Course course)
         {
-            context.Student.Add(student);
+            context.Course.Add(course);
         }
 
-        public void DeleteStudent(Student student)
+        public void DeleteCourse(Course course)
         {
-            Student _student = context.Student.Find(student.StudentId);
-            context.Student.Remove(_student);
+            Course _course = context.Course.Find(course.CourseId);
+            context.Course.Remove(_course);
         }
 
-        public void UpdateStudent(Student student)
+        public void UpdateCourse(Course course)
         {
-            context.Entry(student).State = EntityState.Modified;
+            context.Entry(course).State = EntityState.Modified;
         }
 
         public void Save()

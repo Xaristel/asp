@@ -1,45 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Data;
-using System.Data.Entity;
 
 namespace asp.Models
 {
-    public class StudentRepository : IStudentRepository, IDisposable
+    public class GroupRepository : IGroupRepository, IDisposable
     {
         private DataContext context;
 
-        public StudentRepository(DataContext context)
+        public GroupRepository(DataContext context)
         {
             this.context = context;
         }
 
-        public IEnumerable<Student> GetStudents()
+        public IEnumerable<Group> GetGroups()
         {
-            return context.Student.ToList();
+            return context.Group.ToList();
         }
 
-        public Student GetStudentByID(int id)
+        public Group GetGroupByID(int id)
         {
-            return context.Student.Find(id);
+            return context.Group.Find(id);
         }
 
-        public void AddStudent(Student student)
+        public void AddGroup(Group group)
         {
-            context.Student.Add(student);
+            context.Group.Add(group);
         }
 
-        public void DeleteStudent(Student student)
+        public void DeleteGroup(Group group)
         {
-            Student _student = context.Student.Find(student.StudentId);
-            context.Student.Remove(_student);
+            Group _group = context.Group.Find(group.GroupId);
+            context.Group.Remove(_group);
         }
 
-        public void UpdateStudent(Student student)
+        public void UpdateGroup(Group group)
         {
-            context.Entry(student).State = EntityState.Modified;
+            context.Entry(group).State = EntityState.Modified;
         }
 
         public void Save()
