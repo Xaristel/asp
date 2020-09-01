@@ -1,5 +1,9 @@
 using NUnit.Framework;
 using asp;
+using asp.Controllers;
+using System;
+using Moq;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AspTests
 {
@@ -13,7 +17,7 @@ namespace AspTests
         [Test]
         public void Test1()
         {
-            Assert.Pass();
+
         }
     }
 }

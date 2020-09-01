@@ -6,39 +6,45 @@ using System.Threading.Tasks;
 
 namespace asp.Models
 {
-    public class CourseRepository : ICourseRepository, IDisposable
+    public class Repository<T> : IRepository<T> where T : class
     {
         private DataContext context;
 
-        public CourseRepository(DataContext context)
+        public Repository(DataContext context)
         {
             this.context = context;
         }
 
-        public IEnumerable<Course> GetCourses()
+        public IEnumerable<T> GetAll()
         {
-            return context.Course.ToList();
+            return context.Set<T>().ToList();
         }
 
-        public Course GetCourseByID(int id)
+        public T GetByID(int id)
         {
-            return context.Course.Find(id);
+            return context.Set<T>().Find(id);
         }
 
-        public void AddCourse(Course course)
+        public void Add(T entity)
         {
-            context.Course.Add(course);
+            context.Set<T>().Add(entity);
         }
 
-        public void DeleteCourse(Course course)
+        public void Delete(T entity)
         {
-            Course _course = context.Course.Find(course.CourseId);
-            context.Course.Remove(_course);
+            try
+            {
+                context.Set<T>().Remove(entity);
+            }
+            catch (ArgumentNullException)
+            {
+                throw new ArgumentNullException();
+            }
         }
 
-        public void UpdateCourse(Course course)
+        public void Update(T entity)
         {
-            context.Entry(course).State = EntityState.Modified;
+            context.Entry(entity).State = EntityState.Modified;
         }
 
         public void Save()

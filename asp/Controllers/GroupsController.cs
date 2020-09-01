@@ -11,19 +11,12 @@ namespace asp.Controllers
 {
     public class GroupsController : Controller
     {
-        private IGroupRepository groupRepository;
-        private IStudentRepository studentRepository;
-
-        public GroupsController()
-        {
-            this.groupRepository = new GroupRepository(new DataContext());
-            this.studentRepository = new StudentRepository(new DataContext());
-        }
+        private UnitOfWork unitOfWork = new UnitOfWork();
 
         // GET: Groups
         public IActionResult Index()
         {
-            return View(groupRepository.GetGroups());
+            return View(unitOfWork.GroupRepository.GetAll());
         }
 
         // GET: Groups/Details/5
@@ -31,7 +24,7 @@ namespace asp.Controllers
         {
             try
             {
-                var group = groupRepository.GetGroupByID(id);
+                var group = unitOfWork.GroupRepository.GetByID(id);
                 return View(group);
             }
             catch (ArgumentNullException)
@@ -55,8 +48,8 @@ namespace asp.Controllers
         {
             if (ModelState.IsValid)
             {
-                groupRepository.AddGroup(group);
-                groupRepository.Save();
+                unitOfWork.GroupRepository.Add(group);
+                unitOfWork.GroupRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
             return View(group);
@@ -67,7 +60,7 @@ namespace asp.Controllers
         {
             try
             {
-                var group = groupRepository.GetGroupByID(id);
+                var group = unitOfWork.GroupRepository.GetByID(id);
                 return View(group);
             }
             catch (ArgumentNullException)
@@ -92,8 +85,8 @@ namespace asp.Controllers
             {
                 try
                 {
-                    groupRepository.UpdateGroup(group);
-                    groupRepository.Save();
+                    unitOfWork.GroupRepository.Update(group);
+                    unitOfWork.GroupRepository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -103,7 +96,7 @@ namespace asp.Controllers
                     }
                     else
                     {
-                        throw;
+                        throw new DbUpdateConcurrencyException();
                     }
                 }
                 return RedirectToAction(nameof(Index));
@@ -116,8 +109,8 @@ namespace asp.Controllers
         {
             try
             {
-                var group = groupRepository.GetGroupByID(id);
-                var students = from m in studentRepository.GetStudents()
+                var group = unitOfWork.GroupRepository.GetByID(id);
+                var students = from m in unitOfWork.StudentRepository.GetAll()
                                where m.GroupId == id
                                select m;
                 if (students.ToList().Count == 0)
@@ -140,9 +133,9 @@ namespace asp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            var group = groupRepository.GetGroupByID(id);
-            groupRepository.DeleteGroup(group);
-            groupRepository.Save();
+            var group = unitOfWork.GroupRepository.GetByID(id);
+            unitOfWork.GroupRepository.Delete(group);
+            unitOfWork.GroupRepository.Save();
             return RedirectToAction(nameof(Index));
         }
 
@@ -150,7 +143,7 @@ namespace asp.Controllers
         {
             try
             {
-                groupRepository.GetGroupByID(id);
+                unitOfWork.GroupRepository.GetByID(id);
                 return true;
             }
             catch
@@ -166,7 +159,7 @@ namespace asp.Controllers
                 return NotFound();
             }
 
-            var students = from m in studentRepository.GetStudents()
+            var students = from m in unitOfWork.StudentRepository.GetAll()
                            where m.GroupId == id
                            select m;
 

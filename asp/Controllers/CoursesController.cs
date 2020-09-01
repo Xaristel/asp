@@ -11,19 +11,12 @@ namespace asp.Controllers
 {
     public class CoursesController : Controller
     {
-        private IGroupRepository groupRepository;
-        private ICourseRepository courseRepository;
-
-        public CoursesController()
-        {
-            this.groupRepository = new GroupRepository(new DataContext());
-            this.courseRepository = new CourseRepository(new DataContext());
-        }
+        private UnitOfWork unitOfWork = new UnitOfWork();
 
         // GET: Courses
         public IActionResult Index()
         {
-            return View(courseRepository.GetCourses());
+            return View(unitOfWork.CourseRepository.GetAll());
         }
 
         // GET: Courses/Details/5
@@ -31,7 +24,7 @@ namespace asp.Controllers
         {
             try
             {
-                var course = courseRepository.GetCourseByID(id);
+                var course = unitOfWork.CourseRepository.GetByID(id);
                 return View(course);
             }
             catch (ArgumentNullException)
@@ -55,8 +48,8 @@ namespace asp.Controllers
         {
             if (ModelState.IsValid)
             {
-                courseRepository.AddCourse(course);
-                courseRepository.Save();
+                unitOfWork.CourseRepository.Add(course);
+                unitOfWork.CourseRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
             return View(course);
@@ -67,7 +60,7 @@ namespace asp.Controllers
         {
             try
             {
-                var course = courseRepository.GetCourseByID(id);
+                var course = unitOfWork.CourseRepository.GetByID(id);
                 return View(course);
             }
             catch (ArgumentNullException)
@@ -92,8 +85,8 @@ namespace asp.Controllers
             {
                 try
                 {
-                    courseRepository.UpdateCourse(course);
-                    courseRepository.Save();
+                    unitOfWork.CourseRepository.Update(course);
+                    unitOfWork.CourseRepository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -116,8 +109,8 @@ namespace asp.Controllers
         {
             try
             {
-                var course = courseRepository.GetCourseByID(id);
-                var groups = from m in groupRepository.GetGroups()
+                var course = unitOfWork.CourseRepository.GetByID(id);
+                var groups = from m in unitOfWork.GroupRepository.GetAll()
                              where m.CourseId == id
                              select m;
 
@@ -141,9 +134,9 @@ namespace asp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            var course = courseRepository.GetCourseByID(id);
-            courseRepository.DeleteCourse(course);
-            courseRepository.Save();
+            var course = unitOfWork.CourseRepository.GetByID(id);
+            unitOfWork.CourseRepository.Delete(course);
+            unitOfWork.CourseRepository.Save();
             return RedirectToAction(nameof(Index));
         }
 
@@ -151,7 +144,7 @@ namespace asp.Controllers
         {
             try
             {
-                courseRepository.GetCourseByID(id);
+                unitOfWork.CourseRepository.GetByID(id);
                 return true;
             }
             catch
@@ -168,7 +161,7 @@ namespace asp.Controllers
                 return NotFound();
             }
 
-            var groups = from m in groupRepository.GetGroups()
+            var groups = from m in unitOfWork.GroupRepository.GetAll()
                          where m.CourseId == id
                          select m;
 

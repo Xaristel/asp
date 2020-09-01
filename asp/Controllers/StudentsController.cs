@@ -11,17 +11,12 @@ namespace asp.Controllers
 {
     public class StudentsController : Controller
     {
-        private IStudentRepository studentRepository;
-
-        public StudentsController()
-        {
-            this.studentRepository = new StudentRepository(new DataContext());
-        }
+        private UnitOfWork unitOfWork = new UnitOfWork();
 
         // GET: Students
         public IActionResult Index()
         {
-            return View(studentRepository.GetStudents());
+            return View(unitOfWork.StudentRepository.GetAll());
         }
 
         // GET: Students/Details/5
@@ -29,7 +24,7 @@ namespace asp.Controllers
         {
             try
             {
-                var student = studentRepository.GetStudentByID(id);
+                var student = unitOfWork.StudentRepository.GetByID(id);
                 return View(student);
             }
             catch (ArgumentNullException)
@@ -53,8 +48,8 @@ namespace asp.Controllers
         {
             if (ModelState.IsValid)
             {
-                studentRepository.AddStudent(student);
-                studentRepository.Save();
+                unitOfWork.StudentRepository.Add(student);
+                unitOfWork.StudentRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
             return View(student);
@@ -65,7 +60,7 @@ namespace asp.Controllers
         {
             try
             {
-                var student = studentRepository.GetStudentByID(id);
+                var student = unitOfWork.StudentRepository.GetByID(id);
                 return View(student);
             }
             catch (ArgumentNullException)
@@ -90,8 +85,8 @@ namespace asp.Controllers
             {
                 try
                 {
-                    studentRepository.UpdateStudent(student);
-                    studentRepository.Save();
+                    unitOfWork.StudentRepository.Update(student);
+                    unitOfWork.StudentRepository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -101,7 +96,7 @@ namespace asp.Controllers
                     }
                     else
                     {
-                        throw;
+                        throw new DbUpdateConcurrencyException();
                     }
                 }
                 return RedirectToAction(nameof(Index));
@@ -114,7 +109,7 @@ namespace asp.Controllers
         {
             try
             {
-                var student = studentRepository.GetStudentByID(id);
+                var student = unitOfWork.StudentRepository.GetByID(id);
                 return View(student);
             }
             catch (ArgumentNullException)
@@ -128,9 +123,9 @@ namespace asp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            var student = studentRepository.GetStudentByID(id);
-            studentRepository.DeleteStudent(student);
-            studentRepository.Save();
+            var student = unitOfWork.StudentRepository.GetByID(id);
+            unitOfWork.StudentRepository.Delete(student);
+            unitOfWork.StudentRepository.Save();
             return RedirectToAction(nameof(Index));
         }
 
@@ -138,7 +133,7 @@ namespace asp.Controllers
         {
             try
             {
-                studentRepository.GetStudentByID(id);
+                unitOfWork.StudentRepository.GetByID(id);
                 return true;
             }
             catch
