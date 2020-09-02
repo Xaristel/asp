@@ -11,7 +11,12 @@ namespace asp.Controllers
 {
     public class StudentsController : Controller
     {
-        private UnitOfWork unitOfWork = new UnitOfWork();
+        private UnitOfWork unitOfWork;
+
+        public StudentsController(UnitOfWork unitOfWork)
+        {
+            this.unitOfWork = unitOfWork;
+        }
 
         // GET: Students
         public IActionResult Index()

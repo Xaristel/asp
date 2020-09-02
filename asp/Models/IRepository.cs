@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace asp.Models
 {
-    interface IRepository<T> : IDisposable
+    public interface IRepository<T> : IDisposable
         where T : class
     {
         IEnumerable<T> GetAll();

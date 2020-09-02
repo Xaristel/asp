@@ -11,7 +11,12 @@ namespace asp.Controllers
 {
     public class GroupsController : Controller
     {
-        private UnitOfWork unitOfWork = new UnitOfWork();
+        private UnitOfWork unitOfWork;
+
+        public GroupsController(UnitOfWork unitOfWork)
+        {
+            this.unitOfWork = unitOfWork;
+        }
 
         // GET: Groups
         public IActionResult Index()
