@@ -10,7 +10,8 @@ namespace asp.Models
     {
         IEnumerable<T> GetAll();
         T GetByID(int id);
-        void Add(T item);
+        bool Add(T item);
+        void AddRange(List<T> list);
         void Delete(T item);
         void Update(T item);
         void Save();

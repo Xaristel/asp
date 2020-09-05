@@ -25,9 +25,22 @@ namespace asp.Models
             return context.Set<T>().Find(id);
         }
 
-        public void Add(T entity)
+        public bool Add(T entity)
         {
-            context.Set<T>().Add(entity);
+            try
+            {
+                context.Set<T>().Add(entity);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public void AddRange(List<T> list)
+        {
+            context.Set<T>().AddRange(list);
         }
 
         public void Delete(T entity)

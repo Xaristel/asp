@@ -6,11 +6,18 @@ using System;
 using Moq;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Data.Entity;
+using System.Linq;
 
 namespace AspTests
 {
     public class Tests
     {
+        public IRepository<Student> MockStudentRepository;
+        public IRepository<Group> MockGroupRepository;
+        public IRepository<Course> MockCourseRepository;
+
         private List<Student> GetTestStudents()
         {
             var students = new List<Student>
@@ -46,23 +53,66 @@ namespace AspTests
             };
             return courses;
         }
+
         [SetUp]
         public void Setup()
+        {
+            Mock<IRepository<Student>> mockStudentRepository = new Mock<IRepository<Student>>();
+            var students = GetTestStudents();
+
+            mockStudentRepository.Setup(mr => mr.GetAll()).Returns(students);
+            mockStudentRepository.Setup(mr => mr.GetByID(It.IsAny<int>())).Returns((int i) => students.Where(x => x.StudentId == i).Single());
+            this.MockStudentRepository = mockStudentRepository.Object;
+
+            Mock<IRepository<Group>> mockGroupRepository = new Mock<IRepository<Group>>();
+            var groups = GetTestGroups();
+
+            mockGroupRepository.Setup(mr => mr.GetAll()).Returns(groups);
+            mockGroupRepository.Setup(mr => mr.GetByID(It.IsAny<int>())).Returns((int i) => groups.Where(x => x.GroupId == i).Single());
+            this.MockGroupRepository = mockGroupRepository.Object;
+
+            Mock<IRepository<Course>> mockCourseRepository = new Mock<IRepository<Course>>();
+            var courses = GetTestCourses();
+
+            mockCourseRepository.Setup(mr => mr.GetAll()).Returns(courses);
+            mockCourseRepository.Setup(mr => mr.GetByID(It.IsAny<int>())).Returns((int i) => courses.Where(x => x.CourseId == i).Single());
+            this.MockCourseRepository = mockCourseRepository.Object;
+        }
+
+        [Test]
+        public void TestStudentPages()
+        {
+            //Arrange
+            UnitOfWork unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
+
+            StudentsController controller = new StudentsController(unitOfWork);
+            //Act
+            var resultIndex = controller.Index();
+            var resultDetails = controller.Details(1);
+
+            //Assert
+            Assert.IsNotNull(resultIndex);
+            ViewResult viewResult = resultIndex as ViewResult;
+            if (viewResult != null)
+            {
+                Assert.IsInstanceOf<Student>(viewResult.Model);
+                IEnumerable<Student> model = viewResult as IEnumerable<Student>;
+                Assert.AreEqual(GetTestStudents(), model);
+            }
+
+            Assert.IsInstanceOf<ViewResult>(resultIndex);
+            Assert.IsInstanceOf<ViewResult>(resultDetails);
+        }
+
+        [Test]
+        public void TestGroupPages()
         {
         }
 
         [Test]
-        public void Test1()
+        public void TestCoursePages()
         {
-            var mock = new Mock<UnitOfWork>();
-            mock.Setup(repo => repo.StudentRepository.GetAll()).Returns(GetTestStudents());
-            var controller = new StudentsController();
-
-            var result = controller.Index();
-
-            Assert.IsNotNull(result);
         }
-
 
     }
 }

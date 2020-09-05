@@ -10,11 +10,22 @@ namespace asp.Models
     public class UnitOfWork : IDisposable
     {
         private DataContext context = new DataContext();
-        private Repository<Student> studentRepository;
-        private Repository<Group> groupRepository;
-        private Repository<Course> courseRepository;
+        private IRepository<Student> studentRepository;
+        private IRepository<Group> groupRepository;
+        private IRepository<Course> courseRepository;
 
-        public Repository<Student> StudentRepository
+        public UnitOfWork(IRepository<Student> studentRepository, IRepository<Group> groupRepository, IRepository<Course> courseRepository)
+        {
+            this.studentRepository = studentRepository;
+            this.groupRepository = groupRepository;
+            this.courseRepository = courseRepository;
+        }
+
+        public UnitOfWork()
+        {
+        }
+
+        public IRepository<Student> StudentRepository
         {
             get
             {
@@ -26,7 +37,7 @@ namespace asp.Models
             }
         }
 
-        public Repository<Group> GroupRepository
+        public IRepository<Group> GroupRepository
         {
             get
             {
@@ -38,7 +49,7 @@ namespace asp.Models
             }
         }
 
-        public Repository<Course> CourseRepository
+        public IRepository<Course> CourseRepository
         {
             get
             {
