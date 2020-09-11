@@ -21,7 +21,7 @@ namespace asp.Controllers
         // GET: Students
         public IActionResult Index()
         {
-            return View(unitOfWork.StudentRepository.GetAll());
+            return View("Index", unitOfWork.StudentRepository.GetAll());
         }
 
         // GET: Students/Details/5
@@ -30,7 +30,7 @@ namespace asp.Controllers
             try
             {
                 var student = unitOfWork.StudentRepository.GetByID(id);
-                return View(student);
+                return View("Details", student);
             }
             catch (ArgumentNullException)
             {
@@ -57,7 +57,7 @@ namespace asp.Controllers
                 unitOfWork.StudentRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
-            return View(student);
+            return View("Create", student);
         }
 
         // GET: Students/Edit/5
@@ -66,7 +66,7 @@ namespace asp.Controllers
             try
             {
                 var student = unitOfWork.StudentRepository.GetByID(id);
-                return View(student);
+                return View("Edit", student);
             }
             catch (ArgumentNullException)
             {
@@ -106,7 +106,7 @@ namespace asp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(student);
+            return View("Edit", student);
         }
 
         // GET: Students/Delete/5
@@ -115,7 +115,7 @@ namespace asp.Controllers
             try
             {
                 var student = unitOfWork.StudentRepository.GetByID(id);
-                return View(student);
+                return View("Delete", student);
             }
             catch (ArgumentNullException)
             {
@@ -134,7 +134,7 @@ namespace asp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool StudentExists(int id)
+        public bool StudentExists(int id)
         {
             try
             {

@@ -57,6 +57,11 @@ namespace AspTests
         [SetUp]
         public void Setup()
         {
+        }
+
+        [Test]
+        public void TestStudentPages()
+        {
             Mock<IRepository<Student>> mockStudentRepository = new Mock<IRepository<Student>>();
             var students = GetTestStudents();
 
@@ -77,11 +82,7 @@ namespace AspTests
             mockCourseRepository.Setup(mr => mr.GetAll()).Returns(courses);
             mockCourseRepository.Setup(mr => mr.GetByID(It.IsAny<int>())).Returns((int i) => courses.Where(x => x.CourseId == i).Single());
             this.MockCourseRepository = mockCourseRepository.Object;
-        }
 
-        [Test]
-        public void TestStudentPages()
-        {
             //Arrange
             UnitOfWork unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
 
@@ -89,19 +90,44 @@ namespace AspTests
             //Act
             var resultIndex = controller.Index();
             var resultDetails = controller.Details(1);
+            var resultEdit = controller.Edit(1);
+            var resultDelete = controller.Delete(1);
+            var resultStudentExit = controller.StudentExists(2);
+            var resultDeleteConfirmed = controller.DeleteConfirmed(1);
 
             //Assert
-            Assert.IsNotNull(resultIndex);
-            ViewResult viewResult = resultIndex as ViewResult;
-            if (viewResult != null)
+            try
             {
-                Assert.IsInstanceOf<Student>(viewResult.Model);
-                IEnumerable<Student> model = viewResult as IEnumerable<Student>;
-                Assert.AreEqual(GetTestStudents(), model);
-            }
+                var viewResultIndex = resultIndex as ViewResult;
+                var modelResultIndex = viewResultIndex.ViewData.Model;
 
-            Assert.IsInstanceOf<ViewResult>(resultIndex);
-            Assert.IsInstanceOf<ViewResult>(resultDetails);
+                var viewResultDetails = resultDetails as ViewResult;
+                var modelResultDetails = viewResultDetails.ViewData.Model;
+
+                var viewResultEdit = resultEdit as ViewResult;
+                var modelResultEdit = viewResultEdit.ViewData.Model;
+
+                var viewResultDelete = resultDelete as ViewResult;
+                var modelResultDelete = viewResultDelete.ViewData.Model;
+
+                var redirectDeleteConfirmed = resultDeleteConfirmed as RedirectToActionResult;
+
+                Assert.IsAssignableFrom<Student>(modelResultIndex);
+                Assert.IsAssignableFrom<Student>(modelResultDetails);
+                Assert.IsAssignableFrom<Student>(modelResultEdit);
+                Assert.IsAssignableFrom<Student>(modelResultDelete);
+                Assert.AreEqual("Index", viewResultIndex.ViewName);
+                Assert.AreEqual("Details", viewResultDetails.ViewName);
+                Assert.AreEqual("Edit", viewResultEdit.ViewName);
+                Assert.AreEqual("Delete", viewResultDelete.ViewName);
+                Assert.IsTrue(resultStudentExit);
+                Assert.AreEqual("Index", redirectDeleteConfirmed.ActionName);
+                Assert.IsFalse(redirectDeleteConfirmed.Permanent);
+            }
+            catch
+            {
+                Assert.Fail("Fail tests");
+            }
         }
 
         [Test]
