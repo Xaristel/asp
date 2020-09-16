@@ -21,7 +21,7 @@ namespace asp.Controllers
         // GET: Courses
         public IActionResult Index()
         {
-            return View(unitOfWork.CourseRepository.GetAll());
+            return View("Index", unitOfWork.CourseRepository.GetAll());
         }
 
         // GET: Courses/Details/5
@@ -30,7 +30,7 @@ namespace asp.Controllers
             try
             {
                 var course = unitOfWork.CourseRepository.GetByID(id);
-                return View(course);
+                return View("Details", course);
             }
             catch (ArgumentNullException)
             {
@@ -41,7 +41,7 @@ namespace asp.Controllers
         // GET: Courses/Create
         public IActionResult Create()
         {
-            return View();
+            return View("Create");
         }
 
         // POST: Courses/Create
@@ -57,7 +57,7 @@ namespace asp.Controllers
                 unitOfWork.CourseRepository.Save();
                 return RedirectToAction(nameof(Index));
             }
-            return View(course);
+            return View("Create", course);
         }
 
         // GET: Courses/Edit/5
@@ -66,7 +66,7 @@ namespace asp.Controllers
             try
             {
                 var course = unitOfWork.CourseRepository.GetByID(id);
-                return View(course);
+                return View("Edit", course);
             }
             catch (ArgumentNullException)
             {
@@ -106,7 +106,7 @@ namespace asp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(@course);
+            return View("Edit", @course);
         }
 
         // GET: Courses/Delete/5
@@ -121,7 +121,7 @@ namespace asp.Controllers
 
                 if (groups.ToList().Count == 0)
                 {
-                    return View(@course);
+                    return View("Delete", @course);
                 }
                 else
                 {
@@ -145,7 +145,7 @@ namespace asp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CourseExists(int id)
+        public bool CourseExists(int id)
         {
             try
             {
@@ -170,7 +170,7 @@ namespace asp.Controllers
                          where m.CourseId == id
                          select m;
 
-            return View(groups);
+            return View("Show", groups);
         }
     }
 }

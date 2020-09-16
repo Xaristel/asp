@@ -17,6 +17,7 @@ namespace AspTests
         public IRepository<Student> MockStudentRepository;
         public IRepository<Group> MockGroupRepository;
         public IRepository<Course> MockCourseRepository;
+        public UnitOfWork unitOfWork;
 
         private List<Student> GetTestStudents()
         {
@@ -54,37 +55,36 @@ namespace AspTests
             return courses;
         }
 
-        [SetUp]
-        public void Setup()
+        private void SetMockRepository()
         {
+            Mock<IRepository<Student>> mockStudentRepository = new Mock<IRepository<Student>>();
+            List<Student> students = GetTestStudents();
+
+            mockStudentRepository.Setup(mr => mr.GetAll()).Returns(students);
+            mockStudentRepository.Setup(mr => mr.GetByID(It.IsAny<int>())).Returns((int i) => students.Where(x => x.StudentId == i).Single());
+            this.MockStudentRepository = mockStudentRepository.Object;
+            ////
+            Mock<IRepository<Group>> mockGroupRepository = new Mock<IRepository<Group>>();
+            List<Group> groups = GetTestGroups();
+
+            mockGroupRepository.Setup(gr => gr.GetAll()).Returns(groups);
+            mockGroupRepository.Setup(gr => gr.GetByID(It.IsAny<int>())).Returns((int i) => groups.Where(x => x.GroupId == i).Single());
+            this.MockGroupRepository = mockGroupRepository.Object;
+            ////
+            Mock<IRepository<Course>> mockCourseRepository = new Mock<IRepository<Course>>();
+            List<Course> courses = GetTestCourses();
+
+            mockCourseRepository.Setup(qr => qr.GetAll()).Returns(courses);
+            mockCourseRepository.Setup(qr => qr.GetByID(It.IsAny<int>())).Returns((int i) => courses.Where(x => x.CourseId == i).Single());
+            this.MockCourseRepository = mockCourseRepository.Object;
         }
 
         [Test]
         public void TestStudentPages()
         {
-            Mock<IRepository<Student>> mockStudentRepository = new Mock<IRepository<Student>>();
-            var students = GetTestStudents();
-
-            mockStudentRepository.Setup(mr => mr.GetAll()).Returns(students);
-            mockStudentRepository.Setup(mr => mr.GetByID(It.IsAny<int>())).Returns((int i) => students.Where(x => x.StudentId == i).Single());
-            this.MockStudentRepository = mockStudentRepository.Object;
-
-            Mock<IRepository<Group>> mockGroupRepository = new Mock<IRepository<Group>>();
-            var groups = GetTestGroups();
-
-            mockGroupRepository.Setup(mr => mr.GetAll()).Returns(groups);
-            mockGroupRepository.Setup(mr => mr.GetByID(It.IsAny<int>())).Returns((int i) => groups.Where(x => x.GroupId == i).Single());
-            this.MockGroupRepository = mockGroupRepository.Object;
-
-            Mock<IRepository<Course>> mockCourseRepository = new Mock<IRepository<Course>>();
-            var courses = GetTestCourses();
-
-            mockCourseRepository.Setup(mr => mr.GetAll()).Returns(courses);
-            mockCourseRepository.Setup(mr => mr.GetByID(It.IsAny<int>())).Returns((int i) => courses.Where(x => x.CourseId == i).Single());
-            this.MockCourseRepository = mockCourseRepository.Object;
-
             //Arrange
-            UnitOfWork unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
+            SetMockRepository();
+            unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
 
             StudentsController controller = new StudentsController(unitOfWork);
             //Act
@@ -133,11 +133,113 @@ namespace AspTests
         [Test]
         public void TestGroupPages()
         {
+            //Arrange
+            SetMockRepository();
+            unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
+
+            GroupsController controller = new GroupsController(unitOfWork);
+            //Act
+            var resultIndex = controller.Index();
+            var resultDetails = controller.Details(1);
+            var resultEdit = controller.Edit(1);
+            var resultDelete = controller.Delete(1);
+            var resultGroupExist = controller.GroupExists(1);
+            var resultDeleteConfirmed = controller.DeleteConfirmed(1);
+            var resultShow = controller.Show(1);
+            //Assert
+            try
+            {
+                var viewResultIndex = resultIndex as ViewResult;
+                var modelResultIndex = viewResultIndex.ViewData.Model;
+
+                var viewResultDetails = resultDetails as ViewResult;
+                var modelResultDetails = viewResultDetails.ViewData.Model;
+
+                var viewResultEdit = resultEdit as ViewResult;
+                var modelResultEdit = viewResultEdit.ViewData.Model;
+
+                var viewResultDelete = resultDelete as ContentResult;
+                var modelResultDelete = viewResultDelete.Content;
+
+                var viewResultShow = resultShow as ViewResult;
+                var modelResultShow = viewResultShow.ViewData.Model;
+
+                var redirectDeleteConfirmed = resultDeleteConfirmed as RedirectToActionResult;
+
+                Assert.IsAssignableFrom<Group>(modelResultIndex);
+                Assert.IsAssignableFrom<Group>(modelResultDetails);
+                Assert.IsAssignableFrom<Group>(modelResultEdit);
+                Assert.IsAssignableFrom<Group>(modelResultDelete);
+                Assert.IsAssignableFrom<Group>(modelResultShow);
+                Assert.AreEqual("IndexGroup", viewResultIndex.ViewName);
+                Assert.AreEqual("Details", viewResultDetails.ViewName);
+                Assert.AreEqual("Edit", viewResultEdit.ViewName);
+                Assert.AreEqual("Error. This group has students!", viewResultDelete.Content);
+                Assert.AreEqual("Show", viewResultShow.ViewName);
+                Assert.IsTrue(resultGroupExist);
+                Assert.AreEqual("Index", redirectDeleteConfirmed.ActionName);
+                Assert.IsFalse(redirectDeleteConfirmed.Permanent);
+            }
+            catch
+            {
+                Assert.Fail("Fail tests");
+            }
         }
 
         [Test]
         public void TestCoursePages()
         {
+            //Arrange
+            SetMockRepository();
+            unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
+
+            CoursesController controller = new CoursesController(unitOfWork);
+            //Act
+            var resultIndex = controller.Index();
+            var resultDetails = controller.Details(1);
+            var resultEdit = controller.Edit(1);
+            var resultDelete = controller.Delete(1);
+            var resultCourseExist = controller.CourseExists(1);
+            var resultDeleteConfirmed = controller.DeleteConfirmed(1);
+            var resultShow = controller.Show(1);
+            //Assert
+            try
+            {
+                var viewResultIndex = resultIndex as ViewResult;
+                var modelResultIndex = viewResultIndex.ViewData.Model;
+
+                var viewResultDetails = resultDetails as ViewResult;
+                var modelResultDetails = viewResultDetails.ViewData.Model;
+
+                var viewResultEdit = resultEdit as ViewResult;
+                var modelResultEdit = viewResultEdit.ViewData.Model;
+
+                var viewResultDelete = resultDelete as ContentResult;
+                var modelResultDelete = viewResultDelete.Content;
+
+                var viewResultShow = resultShow as ViewResult;
+                var modelResultShow = viewResultShow.ViewData.Model;
+
+                var redirectDeleteConfirmed = resultDeleteConfirmed as RedirectToActionResult;
+
+                Assert.IsAssignableFrom<Course>(modelResultIndex);
+                Assert.IsAssignableFrom<Course>(modelResultDetails);
+                Assert.IsAssignableFrom<Course>(modelResultEdit);
+                Assert.IsAssignableFrom<Course>(modelResultDelete);
+                Assert.IsAssignableFrom<Course>(modelResultShow);
+                Assert.AreEqual("Index", viewResultIndex.ViewName);
+                Assert.AreEqual("Details", viewResultDetails.ViewName);
+                Assert.AreEqual("Edit", viewResultEdit.ViewName);
+                Assert.AreEqual("Error. This course has groups!", viewResultDelete.Content);
+                Assert.AreEqual("Show", viewResultShow.ViewName);
+                Assert.IsTrue(resultCourseExist);
+                Assert.AreEqual("Index", redirectDeleteConfirmed.ActionName);
+                Assert.IsFalse(redirectDeleteConfirmed.Permanent);
+            }
+            catch
+            {
+                Assert.Fail("Fail tests");
+            }
         }
 
     }
