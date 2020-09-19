@@ -168,7 +168,7 @@ namespace asp.Controllers
                            where m.GroupId == id
                            select m;
 
-            return View("Show", students);
+            return View("Show", students.ToList<Student>());
         }
     }
 }

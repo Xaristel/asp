@@ -170,7 +170,7 @@ namespace asp.Controllers
                          where m.CourseId == id
                          select m;
 
-            return View("Show", groups);
+            return View("Show", groups.ToList<Group>());
         }
     }
 }

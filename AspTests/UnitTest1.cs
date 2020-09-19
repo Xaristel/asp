@@ -17,7 +17,6 @@ namespace AspTests
         public IRepository<Student> MockStudentRepository;
         public IRepository<Group> MockGroupRepository;
         public IRepository<Course> MockCourseRepository;
-        public UnitOfWork unitOfWork;
 
         private List<Student> GetTestStudents()
         {
@@ -84,7 +83,7 @@ namespace AspTests
         {
             //Arrange
             SetMockRepository();
-            unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
+            UnitOfWork unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
 
             StudentsController controller = new StudentsController(unitOfWork);
             //Act
@@ -135,7 +134,7 @@ namespace AspTests
         {
             //Arrange
             SetMockRepository();
-            unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
+            UnitOfWork unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
 
             GroupsController controller = new GroupsController(unitOfWork);
             //Act
@@ -145,7 +144,6 @@ namespace AspTests
             var resultDelete = controller.Delete(1);
             var resultGroupExist = controller.GroupExists(1);
             var resultDeleteConfirmed = controller.DeleteConfirmed(1);
-            var resultShow = controller.Show(1);
             //Assert
             try
             {
@@ -161,24 +159,25 @@ namespace AspTests
                 var viewResultDelete = resultDelete as ContentResult;
                 var modelResultDelete = viewResultDelete.Content;
 
-                var viewResultShow = resultShow as ViewResult;
-                var modelResultShow = viewResultShow.ViewData.Model;
-
                 var redirectDeleteConfirmed = resultDeleteConfirmed as RedirectToActionResult;
 
                 Assert.IsAssignableFrom<Group>(modelResultIndex);
                 Assert.IsAssignableFrom<Group>(modelResultDetails);
                 Assert.IsAssignableFrom<Group>(modelResultEdit);
-                Assert.IsAssignableFrom<Group>(modelResultDelete);
-                Assert.IsAssignableFrom<Group>(modelResultShow);
-                Assert.AreEqual("IndexGroup", viewResultIndex.ViewName);
+                Assert.IsAssignableFrom<String>(modelResultDelete);
+                Assert.AreEqual("Index", viewResultIndex.ViewName);
                 Assert.AreEqual("Details", viewResultDetails.ViewName);
                 Assert.AreEqual("Edit", viewResultEdit.ViewName);
                 Assert.AreEqual("Error. This group has students!", viewResultDelete.Content);
-                Assert.AreEqual("Show", viewResultShow.ViewName);
                 Assert.IsTrue(resultGroupExist);
                 Assert.AreEqual("Index", redirectDeleteConfirmed.ActionName);
                 Assert.IsFalse(redirectDeleteConfirmed.Permanent);
+
+                var resultShow = controller.Show(1);
+                var viewResultShow = resultShow as ViewResult;
+                var modelResultShow = viewResultShow.ViewData.Model;
+                Assert.IsAssignableFrom<List<Student>>(modelResultShow);
+                Assert.AreEqual("Show", viewResultShow.ViewName);
             }
             catch
             {
@@ -191,7 +190,7 @@ namespace AspTests
         {
             //Arrange
             SetMockRepository();
-            unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
+            UnitOfWork unitOfWork = new UnitOfWork(MockStudentRepository, MockGroupRepository, MockCourseRepository);
 
             CoursesController controller = new CoursesController(unitOfWork);
             //Act
@@ -201,7 +200,7 @@ namespace AspTests
             var resultDelete = controller.Delete(1);
             var resultCourseExist = controller.CourseExists(1);
             var resultDeleteConfirmed = controller.DeleteConfirmed(1);
-            var resultShow = controller.Show(1);
+
             //Assert
             try
             {
@@ -217,24 +216,27 @@ namespace AspTests
                 var viewResultDelete = resultDelete as ContentResult;
                 var modelResultDelete = viewResultDelete.Content;
 
-                var viewResultShow = resultShow as ViewResult;
-                var modelResultShow = viewResultShow.ViewData.Model;
-
                 var redirectDeleteConfirmed = resultDeleteConfirmed as RedirectToActionResult;
 
                 Assert.IsAssignableFrom<Course>(modelResultIndex);
                 Assert.IsAssignableFrom<Course>(modelResultDetails);
                 Assert.IsAssignableFrom<Course>(modelResultEdit);
-                Assert.IsAssignableFrom<Course>(modelResultDelete);
-                Assert.IsAssignableFrom<Course>(modelResultShow);
+                Assert.IsAssignableFrom<String>(modelResultDelete);
                 Assert.AreEqual("Index", viewResultIndex.ViewName);
                 Assert.AreEqual("Details", viewResultDetails.ViewName);
                 Assert.AreEqual("Edit", viewResultEdit.ViewName);
                 Assert.AreEqual("Error. This course has groups!", viewResultDelete.Content);
-                Assert.AreEqual("Show", viewResultShow.ViewName);
                 Assert.IsTrue(resultCourseExist);
                 Assert.AreEqual("Index", redirectDeleteConfirmed.ActionName);
                 Assert.IsFalse(redirectDeleteConfirmed.Permanent);
+
+                var resultShow = controller.Show(1);
+
+                var viewResultShow = resultShow as ViewResult;
+                var modelResultShow = viewResultShow.ViewData.Model;
+
+                Assert.IsAssignableFrom<List<Group>>(modelResultShow);
+                Assert.AreEqual("Show", viewResultShow.ViewName);
             }
             catch
             {
